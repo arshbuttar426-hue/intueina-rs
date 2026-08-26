@@ -11,3 +11,8 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 as-not-as-protocol = { path = "../../../buttar-engines/as-not-as-protocol" }
 sha2 = "0.10"
+candle-core = "0.8"
+candle-nn = "0.8"
+candle-transformers = "0.8"
+hf-hub = "0.4"
+tokenizers = "0.21"

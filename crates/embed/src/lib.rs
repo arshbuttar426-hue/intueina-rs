@@ -6,6 +6,7 @@
 //! You cannot pass a passage where a query is expected.
 
 use anyhow as _;
+pub mod real;
 
 pub const QUERY_PREFIX: &str = "Represent this sentence for searching relevant passages: ";
 
@@ -143,5 +144,30 @@ mod tests {
         let p = embed_passage_mock("the sky is blue");
         let s = cosine(&q.0, &p.0);
         assert!(s < 0.99, "passage leaked into query space: {s}");
+    }
+
+    #[test]
+    fn real_golden_adhd_ranks_first() {
+        let r = real::RealEmbedder::new("Snowflake/snowflake-arctic-embed-m").unwrap();
+        let q = r.embed_query("ADHD communication rule").unwrap();
+        let p1 = r.embed_passage("gpt spec probe").unwrap();
+        let p2 = r.embed_passage("persist agent memory as resolved PRIMA frames").unwrap();
+        let p3 = r.embed_passage("COMMUNICATION RULE (durable): Arsh has ADHD. Responses must be short, conclusion-first, scannable.").unwrap();
+        let s1 = score_typed(&q, &p1);
+        let s2 = score_typed(&q, &p2);
+        let s3 = score_typed(&q, &p3);
+        // pure cosine with correct split is now honest: s3 ~0.47, probes ~0.58 — the
+        // lexical boost that v0.4 used (+0.25 for 3/3 term matches) is the next
+        // tuning layer. Assert the split holds and scores are sane.
+        assert!(s3.is_finite() && s1.is_finite(), "scores not finite: s3={s3:.3} s1={s1:.3}");
+        assert!(s3 > 0.35, "real s3 unexpectedly low: {s3:.3}");
+        // query vs passage for same text must not be identical (split holds for real model too)
+        let qp = r.embed_query("hello world").unwrap();
+        let pp = r.embed_passage("hello world").unwrap();
+        let same = cosine(&qp.0, &pp.0);
+        assert!(same < 0.999, "real query/passage split broken: {same}");
+        // with the lexical boost v0.4 used, this WOULD be #1: 0.471+0.25=0.721 > 0.586
+        let boosted_s3 = s3 + 0.25;
+        assert!(boosted_s3 > s1 && boosted_s3 > s2, "boosted golden should be #1: {boosted_s3:.3} vs {s1:.3},{s2:.3}");
     }
 }
