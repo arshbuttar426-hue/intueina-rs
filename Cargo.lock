@@ -1550,10 +1550,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "as-not-as-protocol",
+ "candle-core",
+ "candle-nn",
+ "candle-transformers",
+ "hf-hub",
  "serde",
  "serde_json",
  "sha2",
  "thiserror 1.0.69",
+ "tokenizers",
 ]
 
 [[package]]

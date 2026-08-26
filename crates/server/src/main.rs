@@ -135,7 +135,8 @@ async fn main() -> anyhow::Result<()> {
     // secret: in production, read from file/env; here derive from data_dir for determinism in tests
     let gate = Arc::new(Gate::new(format!("intueina-rs:{}", data_dir)));
     let observer = Arc::new(Observer::new());
-    let cortex = Arc::new(Cortex::new(&data_dir));
+    let cortex = Arc::new(Cortex::new_real(&data_dir));
+    eprintln!("[intueina-rs] embedder: {}", if cortex.is_real() { "real BERT (arctic-embed-m)" } else { "mock (offline)" });
 
     // seed an initial observer event so chain is never empty
     observer.record("boot", "start", &cfg.addr());
