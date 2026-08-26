@@ -85,3 +85,57 @@ recall unless explicitly asked.
 - P-002 · Single consistent schema across all 23 entries — disciplined writer.
 - P-003 · `/health` reports truthful internal counts rather than a blanket ok.
 
+### F-009 · S1 · ROOT CAUSE of F-005 found — asymmetric embed model used symmetrically · 2026-08-26
+`embedder.rs` unconditionally prepends `QUERY_PREFIX` ("Represent this sentence for
+searching relevant passages: ") in `embed()`. `server.rs:69` calls that same function
+when **storing** passages. Snowflake arctic-embed is an *asymmetric* retrieval model:
+prefix belongs on queries only; documents are embedded raw. Storing passages in query
+space inflates unrelated-passage cosines — which is why `"gpt spec probe"` scores
+0.879 against an ADHD-rule query while stored vectors themselves are healthy
+(verified: 768-dim, unit-norm, all distinct, related docs cluster at 0.90+).
+**Rebuild rule:** two embed paths (`embed_query` prefixed / `embed_passage` raw),
+enforced by types so the wrong one cannot compile at a call site.
+
+### F-010 · S1 · DREAMSWAP observer does not exist · 2026-08-26
+Spec Layer 3 defines ingest → hash-chain sequencer → drift detector → falsifier →
+WebSocket alerts. `grep -ri 'observer|dreamswap' cli-rust/src/` → zero hits. The
+tamper-evident audit trail and contradiction detection are paper-only in v0.4.
+**Rebuild rule:** observer is a core crate with its own tests, not a spec section.
+
+### F-011 · S0 · Concurrent writers silently lose memories · 2026-08-26
+Two instances on one store: A learns X (200), B learns Y (200). Final store contains
+B only — **A's memory vanished without error, exit code, or log line.** Whole-blob
+load→mutate→rewrite is last-writer-wins. This directly violates the ONE-BRAIN
+INVARIANT recorded in the store itself ("one persistent store, UPDATED, never
+recreated"): process B recreated it.
+**Rebuild rule:** single-writer discipline via file lock or WAL journal; merge on
+adopt; conflicting writes surface as events, never as silence.
+
+### F-012 · S2 · Production runs the debug binary · 2026-08-26
+The live exocortex (`~/.local/bin/intueina serve`, PID 5902, up ~45h) symlinks to
+`cli-rust/target/debug/intueina`. Every S0/S1 above is therefore **live in
+production memory right now**: unauthenticated vacuum reachable, misranking recall
+serving, no observer. Uptime also means config/code changes require kill-restart
+with no succession procedure.
+**Rebuild rule:** release-profile install target + health-checked restart protocol
+(the living-computation handoff, applied to itself).
+
+---
+
+## WHAT WORKS (honesty column) — round 2 additions
+
+- P-004 · Write-through persistence confirmed: learn returns in ~90ms including
+  embedding; cortex.json mtime updates immediately.
+- P-005 · Recall latency ~188ms per query (full CPU BERT pass) — honest for hardware,
+  far from the verb-chain "<1ms" marketing.
+- P-006 · kill -9 during a 30-write storm left valid JSON (whole-file rewrite is
+  atomic-enough at 240KB; F-007 risk grows with size).
+- P-007 · WebSocket upgrade negotiates correctly (101).
+- P-008 · Probe isolation worked: stress ran against a cloned store via HOME+HF_HOME
+  override; the real brain was untouched throughout.
+
+**Phase A verdict:** mechanism is real and disciplined (single schema, honest
+health, clean build), but three S0/S1-class breaks sit in production: silent data
+loss under concurrency, no gate on destructive ops, and a scoring path whose root
+cause (F-009) is now precisely known. Enough blood. Proceed to Phase B — the law.
+
