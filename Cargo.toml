@@ -1,0 +1,12 @@
+[workspace]
+members = ["crates/store", "crates/embed", "crates/cortex"]
+resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+parking_lot = "0.12"
+anyhow = "1"
+thiserror = "1"
+uuid = { version = "1", features = ["v4", "serde"] }

@@ -1,0 +1,14 @@
+[package]
+name = "intueina-cortex"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+parking_lot = { workspace = true }
+anyhow = { workspace = true }
+uuid = { workspace = true }
+intueina-store = { path = "../store" }
+intueina-embed = { path = "../embed" }
+as-not-as-protocol = { path = "../../../buttar-engines/as-not-as-protocol" }

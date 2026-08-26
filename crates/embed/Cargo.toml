@@ -1,0 +1,13 @@
+[package]
+name = "intueina-embed"
+version = "0.1.0"
+edition = "2021"
+description = "Typed split-path embedding: EmbedQuery vs EmbedPassage (fixes F-009)"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+as-not-as-protocol = { path = "../../../buttar-engines/as-not-as-protocol" }
+sha2 = "0.10"

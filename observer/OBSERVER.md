@@ -146,3 +146,14 @@ laws/exocortex.prima rendered with v0.4 facts → REFUSED at chamber 1
 (SPLITPATH=0) indicts exactly "raw passages". All-facts-pass run exits 0.
 The gate is proven tri-state: refuses the old system, names single violators,
 passes a worthy one. Phase B complete; Phase C may begin.
+
+### PHASE C1–C3 · 2026-08-26 — rebuild proves the fixes
+- **Store (F-007/F-011):** `JournaledStore` — file-locked, temp+rename atomic snapshot,
+  whole-blob double-count eliminated. Tests: `append_and_load_roundtrip` ✓,
+  `concurrent_writers_no_loss` (20 threads, 0 lost) ✓, `kill_mid_storm_leaves_valid_store` ✓.
+- **Embed (F-009):** `EmbedQuery` / `EmbedPassage` are distinct types; `score_typed`
+  only compiles for query→passage. Bag-of-words hash mock shows word-overlap signal.
+  Tests: `query_passage_split_is_real` ✓, `passage_not_in_query_space` ✓.
+- **Cortex (F-005):** word-bag mock restores meaning: golden test
+  "ADHD communication rule" now ranks the durable ADHD rule #1 (was #4 in v0.4).
+  `golden_adhd_rule_ranks_first` ✓, `concurrent_memorize_no_loss_via_store` ✓.
