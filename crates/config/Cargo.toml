@@ -1,0 +1,11 @@
+[package]
+name = "intueina-config"
+version = "0.1.0"
+edition = "2021"
+description = "Strict TOML config, fail-closed on unknown keys (fixes F-001, F-002)"
+
+[dependencies]
+serde = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+toml = "0.8"

@@ -157,3 +157,20 @@ passes a worthy one. Phase B complete; Phase C may begin.
 - **Cortex (F-005):** word-bag mock restores meaning: golden test
   "ADHD communication rule" now ranks the durable ADHD rule #1 (was #4 in v0.4).
   `golden_adhd_rule_ranks_first` ✓, `concurrent_memorize_no_loss_via_store` ✓.
+
+### SMOKE — intueina-rs v0.2.0 on :9399 · 2026-08-26
+Boot prints single port constant (9124) and a demo Bearer token. Every probe
+that failed on v0.4 now passes:
+
+| Probe | v0.4 | v0.2.0 |
+|---|---|---|
+| POST /v1/learn without token | 200 (open) | 401 missing Bearer |
+| POST /v1/learn with token | — | 200 |
+| recall "ADHD communication rule" top | "gpt spec probe" (#4) | durable ADHD rule (#1) |
+| DELETE /v1/nodes/does-not-exist | 200 (lies) | 404 |
+| DELETE without token | 200 | 401 |
+| POST /v1/vacuum without token | 200 (open) | 401 |
+| POST /v1/vacuum with token | — | 200 |
+
+F-003 (vaporware surface) — 8 routes now exist. F-004 (no gate) — every
+mutation gated. F-005 (misrank) — bag-of-words + typed split fixes golden.

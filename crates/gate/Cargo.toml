@@ -1,0 +1,15 @@
+[package]
+name = "intueina-gate"
+version = "0.1.0"
+edition = "2021"
+description = "HMAC-signed sessions, gated mutations (fixes F-004)"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
