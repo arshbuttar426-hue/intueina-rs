@@ -139,3 +139,10 @@ health, clean build), but three S0/S1-class breaks sit in production: silent dat
 loss under concurrency, no gate on destructive ops, and a scoring path whose root
 cause (F-009) is now precisely known. Enough blood. Proceed to Phase B — the law.
 
+
+### HELL-RUN #0 · 2026-08-26
+laws/exocortex.prima rendered with v0.4 facts → REFUSED at chamber 1
+('auth_holds' as 'holds', zero violated). Single-chamber fault injection
+(SPLITPATH=0) indicts exactly "raw passages". All-facts-pass run exits 0.
+The gate is proven tri-state: refuses the old system, names single violators,
+passes a worthy one. Phase B complete; Phase C may begin.

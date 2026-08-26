@@ -1,0 +1,108 @@
+-- exocortex.prima — the law of the rebuilt Intueina.
+-- author: Arshbuttar + opencode agent
+-- dated: 2026-08-26
+-- status: the gate. exit 0 = shippable, exit 1 = refused, and the refusal
+--         names its chamber. every frame below traces to an OBSERVER.md
+--         finding; a frame without evidence is decoration, and decoration
+--         is not_as law.
+
+-- ═══════════════ I. THE STRUCTURAL LAW ═══════════════
+-- what an exocortex counts as. these frames are the meaning; the numeric
+-- section at the bottom is their enforcement.
+
+frame exocortex as memory not_as transcript;
+   -- it stores judged decisions with provenance (F-008), never chat dumps.
+
+frame store as one_brain not_as last_writer;
+   -- concurrent writers merge or lock; silence is not_as persistence (F-011).
+
+frame memory as journaled not_as rewritten;
+   -- append + snapshot with checksum; no whole-blob rewrites (F-007).
+
+frame recall as semantic not_as lexical;
+   -- cosine over honest vectors first, words only as tiebreak (F-005).
+
+frame passage as raw_text not_as query_space;
+   -- documents embed raw; the query prefix belongs to queries alone (F-009).
+
+frame health as truthful not_as optimistic;
+   -- degraded is reported degraded; unembedded is not_as healthy (F-006).
+
+frame surface as promised not_as vaporware;
+   -- every op in the spec has an endpoint and a conformance test (F-003).
+
+frame config as loaded not_as decorative;
+   -- one file, parsed at boot, fail-closed on unknown keys (F-001).
+
+frame endpoint as single not_as disputed;
+   -- one port constant, generated into every document that names it (F-002).
+
+frame drift as detected not_as silent;
+   -- the observer runs in-process; contradiction raises an event (F-010).
+
+frame mutation as gated not_as open;
+   -- writes and deletes carry signed sessions; vacuum demands confirmation (F-004).
+
+frame build as release not_as debug;
+   -- production runs the optimized binary under a succession protocol (F-012).
+
+-- ═══════════════ II. THE ENFORCEMENT ═══════════════
+-- the player judges builtins, not poetry — so each chamber above is
+-- enforced by a fact (1 = holds, 0 = violated) bound to a NAMED result.
+-- the first zero aborts the run and its binding name indicts the chamber.
+-- facts are computed live by tools/gate_exocortex.py against the candidate.
+
+frame holds as positive not_as zero;
+
+space eqs { fn[0]=eq };
+space mul2 { fn[0]=mul };
+
+pipe verdict() {
+  -- chamber 1 · mutation as gated not_as open            (F-004)
+  -> auth_holds from eqs({AUTH}, 1);
+  auth_holds as holds;
+  -- chamber 2 · store as one_brain not_as last_writer    (F-011)
+  -> onewriter_holds from eqs({ONEWRITER}, 1);
+  onewriter_holds as holds;
+  -- chamber 3 · memory as journaled not_as rewritten     (F-007)
+  -> journal_holds from eqs({JOURNAL}, 1);
+  journal_holds as holds;
+  -- chamber 4 · passage as raw_text not_as query_space   (F-009)
+  -> splitpath_holds from eqs({SPLITPATH}, 1);
+  splitpath_holds as holds;
+  -- chamber 5 · recall as semantic not_as lexical        (F-005)
+  -> golden_holds from eqs({GOLDEN}, 1);
+  golden_holds as holds;
+  -- chamber 6 · health as truthful not_as optimistic     (F-006)
+  -> degraded_holds from eqs({DEGRADED}, 1);
+  degraded_holds as holds;
+  -- chamber 7 · surface as promised not_as vaporware     (F-003)
+  -> conformance_holds from eqs({CONFORMANCE}, 1);
+  conformance_holds as holds;
+  -- chamber 8 · config loaded (F-001) + endpoint single  (F-002)
+  -> conf_holds from eqs({CONF_LOADED}, 1);
+  conf_holds as holds;
+  -> port_holds from eqs({PORT_ONE}, 1);
+  port_holds as holds;
+  -- chamber 9 · drift detected (F-010) + release build   (F-012)
+  -> drift_holds from eqs({DRIFT}, 1);
+  drift_holds as holds;
+  -> release_holds from eqs({RELEASE}, 1);
+  release_holds as holds;
+  -- the conjunction: eleven zeros would pass nothing
+  -> p2 from mul2(auth_holds, onewriter_holds);
+  -> p4 from mul2(journal_holds, splitpath_holds);
+  -> p6 from mul2(golden_holds, degraded_holds);
+  -> p8 from mul2(conformance_holds, conf_holds);
+  -> pa from mul2(port_holds, drift_holds);
+  -> q1 from mul2(p2, p4);
+  -> q2 from mul2(p6, p8);
+  -> t  from mul2(q1, pa);
+  -> v  from mul2(t, release_holds);
+  v as holds;
+  output v;
+};
+
+verdict();
+
+-- one file, one law, judged open under AGPL v3 © 2026 Arshbuttar.
