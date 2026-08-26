@@ -132,6 +132,31 @@ async fn delete_node(State(s): State<AppState>, headers: HeaderMap, AxPath(id): 
     (StatusCode::OK, Json(serde_json::json!({"deleted": id}))).into_response()
 }
 
+async fn tools_memorize(State(s): State<AppState>, Json(body): Json<serde_json::Value>) -> impl IntoResponse {
+    // Compat for Shortcuts: POST /tools/memorize — loopback only, no Bearer required.
+    // Body is flexible: {"content":"..."} or {"text":"..."} or raw string or clipboard paste.
+    let content = body.get("content").and_then(|v| v.as_str())
+        .or_else(|| body.get("text").and_then(|v| v.as_str()))
+        .or_else(|| body.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| body.to_string());
+    let content = content.trim().trim_matches('"').to_string();
+    if content.is_empty() || content == "null" {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "empty content"}))).into_response();
+    }
+    let cortex = s.cortex.clone();
+    let c = content.clone();
+    let res = tokio::task::spawn_blocking(move || cortex.memorize(&c, "note")).await;
+    match res {
+        Ok(Ok(id)) => {
+            s.observer.record("compat", "tools_memorize", &content);
+            (StatusCode::OK, Json(serde_json::json!({"id": id, "via": "compat"}))).into_response()
+        }
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": format!("blocking: {e}")}))).into_response(),
+    }
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().with_env_filter(EnvFilter::from_default_env()).init();
@@ -158,6 +183,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/learn", post(learn))
         .route("/v1/recall", post(recall))
         .route("/v1/memorize", post(memorize))
+        .route("/tools/memorize", post(tools_memorize))
         .route("/v1/think", post(think))
         .route("/v1/review", post(review))
         .route("/v1/stats", get(stats))

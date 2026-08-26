@@ -180,3 +180,9 @@ mutation gated. F-005 (misrank) — bag-of-words + typed split fixes golden.
 thread. Fix: `Cortex.real` now `Arc<Mutex<RealEmbedder>>`, server handlers
 offload `memorize`/`recall` via `spawn_blocking`. Re-test: 10 parallel
 learns → 0.39s, 10/10 survived (was ∞). Unit durability already proven.
+
+### CUTOVER · 2026-08-26 19:15 — shadow → live
+- Shadow on :9125 re-embedded 23 memories raw via /v1/learn (real BERT), golden #1 0.722, compat /tools/memorize 200 without token.
+- Killed v0.4 PID 5902 (45h), moved shadow store (237K) to ~/.intueina, started intueina-rs on :9124.
+- Live now: 25 nodes, observer_healthy true, real BERT, compat works. Rollback tar + pre-cutover snapshot kept.
+- Symlink ~/.local/bin/intueina → intueina-rs. Next boot will start the new build.
