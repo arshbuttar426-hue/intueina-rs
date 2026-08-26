@@ -174,3 +174,9 @@ that failed on v0.4 now passes:
 
 F-003 (vaporware surface) — 8 routes now exist. F-004 (no gate) — every
 mutation gated. F-005 (misrank) — bag-of-words + typed split fixes golden.
+
+### PATCH · 2026-08-26 — real BERT blocked async runtime (W6 live)
+20 parallel `learn` hung the tokio runtime: BERT forward ran on the worker
+thread. Fix: `Cortex.real` now `Arc<Mutex<RealEmbedder>>`, server handlers
+offload `memorize`/`recall` via `spawn_blocking`. Re-test: 10 parallel
+learns → 0.39s, 10/10 survived (was ∞). Unit durability already proven.

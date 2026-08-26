@@ -24,7 +24,7 @@ pub struct Scored {
 pub struct Cortex {
     store: JournaledStore,
     mock: TypedEmbedder,
-    real: Option<RealEmbedder>,
+    real: Option<std::sync::Arc<parking_lot::Mutex<RealEmbedder>>>,
 }
 
 impl Cortex {
@@ -35,7 +35,7 @@ impl Cortex {
     /// Real BERT-backed — tries to load arctic-embed-m, falls back to mock with a warning.
     pub fn new_real(dir: impl AsRef<std::path::Path>) -> Self {
         let real = match RealEmbedder::new("Snowflake/snowflake-arctic-embed-m") {
-            Ok(r) => Some(r),
+            Ok(r) => Some(std::sync::Arc::new(parking_lot::Mutex::new(r))),
             Err(e) => {
                 eprintln!("[cortex] real embedder failed ({e}), falling back to mock");
                 None
@@ -47,7 +47,7 @@ impl Cortex {
     pub fn memorize(&self, content: &str, memory_type: &str) -> anyhow::Result<String> {
         let id = format!("learn_{}", uuid::Uuid::new_v4());
         let vec = if let Some(r) = &self.real {
-            r.embed_passage(content)?.0
+            r.lock().embed_passage(content)?.0
         } else {
             self.mock.embed_passage(content)?.0
         };
@@ -59,7 +59,7 @@ impl Cortex {
     pub fn recall(&self, query: &str, k: usize) -> anyhow::Result<Vec<Scored>> {
         let nodes: Vec<StoredNode> = self.store.load().unwrap_or_default();
         let qv = if let Some(r) = &self.real {
-            r.embed_query(query)?.0
+            r.lock().embed_query(query)?.0
         } else {
             self.mock.embed_query(query)?.0
         };

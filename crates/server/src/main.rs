@@ -70,22 +70,28 @@ async fn learn(State(s): State<AppState>, headers: HeaderMap, Json(req): Json<Le
         return (code, Json(serde_json::json!({"error": msg}))).into_response();
     }
     let mt = req.memory_type.unwrap_or_else(|| "note".into());
-    match s.cortex.memorize(&req.content, &mt) {
-        Ok(id) => {
+    let content = req.content.clone();
+    let cortex = s.cortex.clone();
+    let res = tokio::task::spawn_blocking(move || cortex.memorize(&content, &mt)).await;
+    match res {
+        Ok(Ok(id)) => {
             s.observer.record("api", "learn", &req.content);
             (StatusCode::OK, Json(serde_json::json!({"id": id}))).into_response()
         }
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": format!("blocking: {e}")}))).into_response(),
     }
 }
 
 async fn recall(State(s): State<AppState>, Json(req): Json<RecallReq>) -> impl IntoResponse {
-    // recall is read — requires at least "read" cap if gate is enforced;
-    // for now allow anonymously but record the event (future: gate it too)
     let k = req.k.unwrap_or(5).clamp(1, 20);
-    match s.cortex.recall(&req.query, k) {
-        Ok(hits) => (StatusCode::OK, Json(serde_json::json!({"memories": hits.into_iter().map(|h| serde_json::json!({"content": h.content, "score": h.score})).collect::<Vec<_>>() }))).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+    let query = req.query.clone();
+    let cortex = s.cortex.clone();
+    let res = tokio::task::spawn_blocking(move || cortex.recall(&query, k)).await;
+    match res {
+        Ok(Ok(hits)) => (StatusCode::OK, Json(serde_json::json!({"memories": hits.into_iter().map(|h| serde_json::json!({"content": h.content, "score": h.score})).collect::<Vec<_>>() }))).into_response(),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": format!("blocking: {e}")}))).into_response(),
     }
 }
 
